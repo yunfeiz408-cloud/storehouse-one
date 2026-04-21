@@ -1,0 +1,394 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Crown, 
+  Users, 
+  Scale, 
+  Flame, 
+  MessageSquare, 
+  ArrowRight, 
+  Menu, 
+  X,
+  MapPin,
+  Flag,
+  BookOpen,
+  Sword,
+  ShieldCheck,
+  ChevronRight
+} from 'lucide-react';
+
+// --- 自定义动效组件 (Scroll Reveal) ---
+const FadeIn = ({ children, delay = 0, direction = 'up' }) => {
+  const [isVisible, setVisible] = useState(false);
+  const domRef = useRef();
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisible(true);
+          observer.unobserve(domRef.current);
+        }
+      },
+      { threshold: 0.15 }
+    );
+    if (domRef.current) observer.observe(domRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const getTransform = () => {
+    if (isVisible) return 'translate-y-0 translate-x-0';
+    switch (direction) {
+      case 'up': return 'translate-y-12';
+      case 'down': return '-translate-y-12';
+      case 'left': return 'translate-x-12';
+      case 'right': return '-translate-x-12';
+      default: return 'translate-y-12';
+    }
+  };
+
+  return (
+    <div
+      ref={domRef}
+      className={`transition-all duration-1000 ease-out ${
+        isVisible ? 'opacity-100' : 'opacity-0'
+      } ${getTransform()}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+};
+
+// --- 主应用组件 ---
+export default function App() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // 监听滚动以改变导航栏样式
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 平滑滚动到锚点
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 font-sans-sc overflow-hidden selection:bg-red-900 selection:text-amber-100">
+      {/* 注入全局字体与自定义样式 */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        .font-serif-sc { font-family: 'Noto Serif SC', serif; }
+        .font-sans-sc { font-family: 'Noto Sans SC', sans-serif; }
+        html { scroll-behavior: smooth; }
+        /* 定制高级感滚动条 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+      `}} />
+
+      {/* --- 1. 顶部导航栏 --- */}
+      <nav className={`fixed w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-zinc-950/90 backdrop-blur-md border-b border-white/5 py-3' : 'bg-transparent py-5'}`}>
+        <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0, 0)}>
+            <Crown className="w-8 h-8 text-[#C5A059]" />
+            <span className="text-xl font-serif-sc font-bold tracking-widest text-zinc-100">汉风·刘邦</span>
+          </div>
+
+          {/* 桌面端链接 */}
+          <div className="hidden md:flex items-center gap-8 text-sm tracking-wider">
+            <button onClick={() => scrollToSection('hero')} className="hover:text-[#C5A059] transition-colors">首页</button>
+            <button onClick={() => scrollToSection('timeline')} className="hover:text-[#C5A059] transition-colors">楚汉风云</button>
+            <button onClick={() => scrollToSection('traits')} className="hover:text-[#C5A059] transition-colors">帝王之术</button>
+            <button onClick={() => scrollToSection('community')} className="hover:text-[#C5A059] transition-colors">聚义厅</button>
+          </div>
+
+          {/* CTA & Mobile Toggle */}
+          <div className="flex items-center gap-4">
+            <button className="hidden md:flex items-center gap-2 px-5 py-2.5 border border-[#8B0000]/50 bg-[#8B0000]/10 hover:bg-[#8B0000] text-[#C5A059] hover:text-white rounded-full transition-all duration-300 font-medium text-sm">
+              加入社群 <ArrowRight className="w-4 h-4" />
+            </button>
+            <button className="md:hidden text-zinc-300" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* 移动端菜单 */}
+        {isMobileMenuOpen && (
+          <div className="absolute top-full left-0 w-full bg-zinc-950 border-b border-zinc-800/50 flex flex-col p-6 gap-4 md:hidden">
+            <button onClick={() => scrollToSection('hero')} className="text-left py-2 hover:text-[#C5A059]">首页</button>
+            <button onClick={() => scrollToSection('timeline')} className="text-left py-2 hover:text-[#C5A059]">楚汉风云</button>
+            <button onClick={() => scrollToSection('traits')} className="text-left py-2 hover:text-[#C5A059]">帝王之术</button>
+            <button onClick={() => scrollToSection('community')} className="text-left py-2 hover:text-[#C5A059]">聚义厅</button>
+            <button className="mt-4 w-full py-3 bg-[#8B0000] text-white rounded-md font-medium">加入社群</button>
+          </div>
+        )}
+      </nav>
+
+      {/* --- 2. 英雄首屏 (Hero) --- */}
+      <section id="hero" className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        {/* 背景光影效果 (玄黑、朱红、暗金交织) */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-[#0a0a0a] to-[#0a0a0a] -z-10"></div>
+        <div className="absolute top-1/4 right-0 w-96 h-96 bg-[#8B0000]/10 rounded-full blur-[120px] -z-10"></div>
+        <div className="absolute bottom-0 left-1/4 w-[30rem] h-[30rem] bg-[#C5A059]/5 rounded-full blur-[120px] -z-10"></div>
+
+        <div className="max-w-4xl mx-auto px-6 text-center z-10">
+          <FadeIn>
+            <p className="text-[#C5A059] font-medium tracking-[0.2em] mb-4 text-sm md:text-base">探寻千古一帝的文化密码</p>
+          </FadeIn>
+          <FadeIn delay={200}>
+            <h1 className="text-5xl md:text-7xl font-serif-sc font-bold text-zinc-100 leading-tight mb-6">
+              大风起兮<span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C5A059] to-amber-700">云飞扬</span>
+            </h1>
+          </FadeIn>
+          <FadeIn delay={400}>
+            <p className="text-lg md:text-xl text-zinc-400 mb-10 max-w-2xl mx-auto leading-relaxed">
+              从泗水亭长到大汉开国皇帝，拆解刘邦的传奇人生、领导力智慧与资源整合的极致艺术。
+            </p>
+          </FadeIn>
+          <FadeIn delay={600}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button 
+                onClick={() => scrollToSection('timeline')}
+                className="px-8 py-4 bg-gradient-to-r from-[#8B0000] to-red-950 text-zinc-100 hover:text-white rounded-sm transition-all hover:shadow-[0_0_20px_rgba(139,0,0,0.4)] tracking-widest font-medium w-full sm:w-auto"
+              >
+                开启探索
+              </button>
+              <button 
+                onClick={() => scrollToSection('community')}
+                className="px-8 py-4 border border-zinc-700 hover:border-[#C5A059] hover:text-[#C5A059] bg-zinc-900/50 rounded-sm transition-all tracking-widest font-medium w-full sm:w-auto"
+              >
+                参与讨论
+              </button>
+            </div>
+          </FadeIn>
+        </div>
+        
+        {/* 向下滚动提示 */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-50">
+          <ChevronRight className="w-6 h-6 rotate-90 text-[#C5A059]" />
+        </div>
+      </section>
+
+      {/* --- 3. 模块一：楚汉风云 (Timeline) --- */}
+      <section id="timeline" className="py-24 bg-zinc-950 relative border-t border-white/5">
+        <div className="max-w-6xl mx-auto px-6">
+          <FadeIn>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-serif-sc font-bold text-zinc-100 mb-4">楚汉风云 <span className="text-[#8B0000]">·</span> 传奇人生</h2>
+              <p className="text-zinc-500 tracking-wider">时势造英雄，英雄亦造时势</p>
+            </div>
+          </FadeIn>
+
+          <div className="relative">
+            {/* 时间轴中线 */}
+            <div className="absolute left-[20px] md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[#C5A059]/30 to-transparent transform md:-translate-x-1/2"></div>
+
+            {/* 时间轴节点数据 */}
+            {[
+              { title: "泗水亭长", desc: "市井出身，豁达大度。早年的底层经历让他深谙人性和社会运转法则。", icon: MapPin },
+              { title: "斩蛇起义", desc: "顺应大势，初露锋芒。芒砀山斩白蛇，揭竿而起，反抗暴秦。", icon: Sword },
+              { title: "约法三章", desc: "入主关中，收揽民心。废除秦朝苛法，与关中父老定下规矩，展现极高政治觉悟。", icon: BookOpen },
+              { title: "楚汉之争", desc: "屡败屡战，坚韧不拔。面对西楚霸王项羽，以弱抗强，百折不挠。", icon: ShieldCheck },
+              { title: "建立大汉", desc: "登基称帝，开创四百年汉室基业，奠定华夏民族底色。", icon: Flag }
+            ].map((item, index) => (
+              <FadeIn key={index} delay={index * 150} direction={index % 2 === 0 ? 'right' : 'left'}>
+                <div className={`relative flex items-center justify-between mb-12 md:mb-8 ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                  {/* 中间金点 */}
+                  <div className="absolute left-[20px] md:left-1/2 w-3 h-3 rounded-full bg-[#C5A059] transform -translate-x-1/2 shadow-[0_0_10px_rgba(197,160,89,0.8)] border-2 border-zinc-950 z-10"></div>
+                  
+                  {/* 空白占位 (Desktop) */}
+                  <div className="hidden md:block md:w-1/2"></div>
+                  
+                  {/* 内容卡片 */}
+                  <div className={`w-full pl-12 md:pl-0 md:w-1/2 ${index % 2 === 0 ? 'md:pr-16' : 'md:pl-16'}`}>
+                    <div className="p-6 bg-zinc-900/40 border border-zinc-800 rounded-lg hover:border-[#8B0000]/60 hover:bg-zinc-900/80 transition-all group hover:shadow-2xl hover:shadow-[#8B0000]/10">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-[#8B0000]/20 text-[#C5A059] rounded-md group-hover:scale-110 transition-transform">
+                          <item.icon className="w-5 h-5" />
+                        </div>
+                        <h3 className="text-xl font-serif-sc font-bold text-zinc-200">{item.title}</h3>
+                      </div>
+                      <p className="text-zinc-400 leading-relaxed text-sm">{item.desc}</p>
+                    </div>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- 4. 模块二：帝王之术 (Grid Cards) --- */}
+      <section id="traits" className="py-24 bg-[#0a0a0a] relative">
+        <div className="max-w-6xl mx-auto px-6">
+          <FadeIn>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-serif-sc font-bold text-zinc-100 mb-4">帝王之术 <span className="text-[#8B0000]">·</span> 核心特质</h2>
+              <p className="text-zinc-500 tracking-wider">剖析高祖刘邦非凡的领导力密码</p>
+            </div>
+          </FadeIn>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            {[
+              { 
+                title: "知人善任", 
+                subtitle: "极致的组织构建力",
+                desc: "“夫运筹策帷帐之中，决胜于千里之外，吾不如子房；镇国家，抚百姓，给馈饷，不绝粮道，吾不如萧何；连百万之军，战必胜，攻必取，吾不如韩信。”", 
+                icon: Users 
+              },
+              { 
+                title: "实用主义", 
+                subtitle: "结果导向的高效执行",
+                desc: "不拘泥于繁文缛节与虚名，能迅速看清事物本质。无论是分封诸侯还是休养生息，皆以当下最有利于大局的利益为准绳。", 
+                icon: Scale 
+              },
+              { 
+                title: "能屈能伸", 
+                subtitle: "逆境中的生存哲学",
+                desc: "赴鸿门宴的隐忍，受困荥阳的坚持。不以一时的颜面为意，展现出极强的抗挫折能力和顶级的情绪管理能力。", 
+                icon: ShieldCheck 
+              },
+              { 
+                title: "人格魅力", 
+                subtitle: "无与伦比的资源整合",
+                desc: "出身市井却能让豪杰归心；豁达大度，舍得分享利益。将各路诸侯、文臣武将的个人诉求与建立大汉的共同愿景完美绑定。", 
+                icon: Crown 
+              }
+            ].map((trait, index) => (
+              <FadeIn key={index} delay={index * 100}>
+                <div className="group h-full p-8 bg-zinc-900/30 border border-zinc-800 rounded-xl hover:-translate-y-2 hover:border-[#C5A059]/40 transition-all duration-300 relative overflow-hidden">
+                  {/* 卡片背景高亮特效 */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#8B0000]/10 blur-[50px] group-hover:bg-[#C5A059]/10 transition-colors"></div>
+                  
+                  <div className="mb-6 flex justify-between items-start">
+                    <div className="w-14 h-14 rounded-full bg-zinc-950 flex items-center justify-center border border-zinc-800 group-hover:border-[#C5A059] transition-colors relative z-10">
+                      <trait.icon className="w-6 h-6 text-[#C5A059]" />
+                    </div>
+                    <span className="text-zinc-600 font-serif-sc text-4xl opacity-20 block leading-none">0{index + 1}</span>
+                  </div>
+                  <h3 className="text-2xl font-serif-sc font-bold text-zinc-100 mb-2 relative z-10">{trait.title}</h3>
+                  <div className="text-[#C5A059] text-sm mb-4 relative z-10">{trait.subtitle}</div>
+                  <p className="text-zinc-400 text-sm leading-relaxed relative z-10">{trait.desc}</p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- 5. 模块三：聚义厅 (Community) --- */}
+      <section id="community" className="py-24 bg-zinc-950 border-t border-white/5">
+        <div className="max-w-6xl mx-auto px-6">
+          <FadeIn>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-serif-sc font-bold text-zinc-100 mb-4">聚义厅 <span className="text-[#8B0000]">·</span> 文化交流</h2>
+              <p className="text-zinc-500 tracking-wider">坐而论道，古今智慧碰撞</p>
+            </div>
+          </FadeIn>
+
+          <div className="flex flex-col lg:flex-row gap-12">
+            {/* 左侧：热门话题 */}
+            <div className="w-full lg:w-1/2">
+              <FadeIn delay={100} direction="right">
+                <h3 className="text-xl font-medium text-zinc-200 mb-6 flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-[#8B0000]" /> 热议话题
+                </h3>
+                <div className="space-y-4">
+                  {[
+                    { title: "如果刘邦在现代企业，适合做 CEO 还是 HRD？", views: "2.4w" },
+                    { title: "刘邦与项羽：性格决定命运的终极案例分析", views: "1.8w" },
+                    { title: "解析《大风歌》背后的帝王孤独与家国情怀", views: "1.2w" },
+                    { title: "论“白马之盟”对汉代政治格局的深远影响", views: "9.5k" }
+                  ].map((topic, i) => (
+                    <div key={i} className="group p-5 bg-[#0a0a0a] border border-zinc-800 rounded-lg hover:border-[#8B0000]/50 cursor-pointer transition-colors flex justify-between items-center">
+                      <span className="text-zinc-300 group-hover:text-[#C5A059] transition-colors">{topic.title}</span>
+                      <span className="text-xs text-zinc-600 flex items-center gap-1 shrink-0"><Users className="w-3 h-3"/> {topic.views}</span>
+                    </div>
+                  ))}
+                </div>
+              </FadeIn>
+            </div>
+
+            {/* 右侧：留言板与输入 */}
+            <div className="w-full lg:w-1/2">
+              <FadeIn delay={200} direction="left">
+                <h3 className="text-xl font-medium text-zinc-200 mb-6 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-[#C5A059]" /> 留下见解
+                </h3>
+                
+                {/* 评论墙展示 */}
+                <div className="bg-[#0a0a0a] p-6 rounded-lg border border-zinc-800 mb-6 space-y-6 h-64 overflow-y-auto">
+                  <div className="border-b border-zinc-800/50 pb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-[#C5A059]">汉风学者_李先生</span>
+                      <span className="text-xs text-zinc-600">2小时前</span>
+                    </div>
+                    <p className="text-sm text-zinc-400">最佩服的就是他的“用人不疑”，能让韩信这种心高气傲的军事天才死心塌地，本身就是一种极高的领导艺术。</p>
+                  </div>
+                  <div className="border-b border-zinc-800/50 pb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-[#C5A059]">历史爱好者_W</span>
+                      <span className="text-xs text-zinc-600">5小时前</span>
+                    </div>
+                    <p className="text-sm text-zinc-400">楚汉之争表面是军事较量，实质是政治格局和资源整合能力的碾压。项羽分封诸侯是倒退，刘邦建立汉制是顺应历史。</p>
+                  </div>
+                </div>
+
+                {/* 输入框 */}
+                <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
+                  <textarea 
+                    rows="3"
+                    placeholder="分享你对刘邦智慧的感悟..."
+                    className="w-full p-4 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] transition-all resize-none"
+                  ></textarea>
+                  <button className="self-end px-6 py-2.5 bg-[#C5A059] hover:bg-amber-500 text-zinc-950 font-medium rounded-md transition-colors">
+                    发表见解
+                  </button>
+                </form>
+              </FadeIn>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- 6. 页脚 (Footer) --- */}
+      <footer className="bg-[#050505] py-12 border-t border-zinc-900">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2">
+            <Crown className="w-6 h-6 text-zinc-600" />
+            <span className="text-lg font-serif-sc font-bold text-zinc-500">汉风·刘邦文化</span>
+          </div>
+          
+          <div className="text-sm text-zinc-600">
+            © {new Date().getFullYear()} 汉风文化研究品牌. 保留所有权利.
+          </div>
+
+          <div className="flex gap-4">
+            <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500 hover:bg-[#8B0000] hover:text-white transition-colors">
+              <span className="text-xs font-bold">微</span>
+            </a>
+            <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500 hover:bg-[#8B0000] hover:text-white transition-colors">
+              <span className="text-xs font-bold">博</span>
+            </a>
+            <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-500 hover:bg-[#8B0000] hover:text-white transition-colors">
+              <span className="text-xs font-bold">知</span>
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
